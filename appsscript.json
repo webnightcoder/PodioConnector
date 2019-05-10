@@ -1,0 +1,19 @@
+{
+  "timeZone": "America/New_York",
+  "dependencies": {
+    "libraries": [{
+      "userSymbol": "OAuth2",
+      "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF",
+      "version": "26"
+    }]
+  },
+  "dataStudio":{
+    "name": "Podio Connector",
+    "company": "Lucenta solutions",
+    "logoUrl": "https://lh5.googleusercontent.com/p/AF1QipMLt2jYXucaqZnei7yKgOZwxhPOEFQ3-OnlfxBp=w160-h160-k-no",
+    "addonUrl": "https://github.com/webnightcoder/podio-connector",
+    "supportUrl": "https://github.com/webnightcoder/podio-connector",
+    "description": "Fetch Data from Podio and Create Graph"
+  },
+  "exceptionLogging": "STACKDRIVER"
+}
