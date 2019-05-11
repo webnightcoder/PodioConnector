@@ -1,4 +1,4 @@
-
+var podioSchema;
 function getAuthType() {
     var response = {
       type: 'OAUTH2'
@@ -78,18 +78,85 @@ function getConfig(request) {
     config.setDateRangeRequired(false);
     return config.build();
 }
-var podioSchema;
+
+
 function getSchema(request) {
-    var reqSchema =  getDynamicSchema(request.configParams.app_id);
-    podioSchema = reqSchema;
+    var fields = getFields(request).build();
+        podioSchema = fields;
     return {
-        schema : reqSchema
+        'schema':fields
+    }
+}
+
+function getFields(request){
+    var headers = {
+        Authorization : "Bearer " + getOAuthService().getAccessToken()
+    }
+    var url = 'https://api.podio.com/app/' +request.configParams.app_id + '/';
+    var result = UrlFetchApp.fetch(url, {headers : headers});
+    var orgObj = []
+    var context = JSON.parse(result.getContentText());
+    var appFields  = context.fields;
+    var cc = DataStudioApp.createCommunityConnector();
+    var fields = cc.getFields();
+    var types = cc.FieldType;
+    var aggregations = cc.AggregationType;
+    
+    for(var i =0; i < appFields.length; i++){
+        if(appFields[i].type == 'app' || appFields[i].type == 'text'){
+            if(appFields[i].status == 'active'){
+                fields.newDimension()
+                    .setId(appFields[i].external_id)
+                    .setName(appFields[i].label)
+                    .setType(types.TEXT);
+            }
+        }else if(appFields[i].type == 'date'){
+            if(appFields[i].status == 'active'){
+                fields.newDimension()
+                    .setId(appFields[i].external_id)
+                    .setName(appFields[i].label)
+                    .setType(types.YEAR_MONTH_DAY);
+            }
+        }else if(appFields[i].type == 'calculation'){
+            if(appFields[i].status == "active"){
+
+                fields.newMetric()
+                .setId(appFields[i].external_id)
+                .setName(appFields[i].label)
+                .setType(types.NUMBER)
+            }
+        }else if(appFields[i].type == "number"){
+            if(appFields[i].status == 'active'){
+                fields.newMetric()
+                .setId(appFields[i].external_id)
+                .setName(appFields[i].label)
+                .setType(types.NUMBER)
+            }
+        }else if(appFields[i].type == 'location'){
+            if(appFields[i].status == 'active'){
+                fields.newDimension()
+                    .setId(appFields[i].external_id)
+                    .setName(appFields[i].label)
+                    .setType(types.TEXT);
+            }
+        }else if(appFields.type == 'catagory'){
+            if(appFields[i].status == 'active'){
+                fields.newDimension()
+                    .setId(appFields[i].external_id)
+                    .setName(appFields[i].label)
+                    .setType(types.TEXT);
+            }
+        }
     }
 
+    return fields;
 }
+
 
 function getData(request) {
     // Create schema for requested fields
+    console.log("Request :" + JSON.stringify(request));
+    console.log("GET DATA " + podioSchema);
     var requestedSchema = request.fields.map(function(field) {
       for (var i = 0; i < podioSchema.length; i++) {
         if (podioSchema[i].name == field.name) {
@@ -97,6 +164,7 @@ function getData(request) {
         }
       }
     });
+    console.log("requested Schema is : " + JSON.stringify(requestedSchema));
   
     // Fetch and parse data from API
     var headers = {
@@ -111,34 +179,9 @@ function getData(request) {
         var item_id = items[i].item_id;
         var fields = items[i].fields;
         var tempObj = {};
-        tempObj['item_id'] = item_id;
+        // tempObj['item_id'] = item_id;
         for(var j =0; j < fields.length; j++){
-            var external_id = fields[j].external_id;
-            
-            if(fields[j].type == 'text'){
-                tempObj[external_id] = fields[j].values[0].value;
-            }else if(fields[j].type == 'app'){
-                
-                 tempObj[external_id]  = fields[j].values[0].value.item_id;
-
-            }else if(fields[j].type == 'date'){
-
-                tempObj[external_id]  = (fields[j].values[0].start_date).split('-').join('');
-
-            }else if(fields[j].type == 'calculation'){
-
-                tempObj[external_id]  = fields[j].values[0].value;
-
-            }else if(fields[j].type == "number"){
-                tempObj[external_id]  = parseInt(fields[j].values[0].value);
-
-            }else if(fields[j].type == 'location'){
-                tempObj[external_id]  = fields[j].values[0].value;
-
-            }else if(fields[j].type == 'catagory'){
-
-                tempObj[external_id]  = fields[j].values[0].value.id;
-            }
+            // if(fields[i].external_id == )
         }
         itemData.push(tempObj);
         tempObj = {};
@@ -151,94 +194,3 @@ function getData(request) {
 }
 
 
-function getDynamicSchema(app_id){
-    var self = this;
-    var apiKey  = getOAuthService().getAccessToken();
-    var headers = {
-        Authorization : "Bearer " + apiKey
-    }
-    console.log('apiKey Is : ' + apiKey );
-    var url = 'https://api.podio.com/app/'+app_id + '/';
-    var result = UrlFetchApp.fetch(url, {headers : headers});
-    var orgObj = []
-    var context = JSON.parse(result.getContentText());
-    var fields  = context.fields;
-    var schema = [];
-    schema.push({
-        name  : 'item_id',
-        dataType : "NUMBER",
-        semantics: {
-            conceptType: 'DIMENSION'
-        }
-    })
-    for(var i =0; i < fields.length; i++){
-        if(fields[i].type == 'app' || fields[i].type == 'text'){
-            if(fields[i].status == 'active'){
-                schema.push({
-                    name  : fields[i].external_id,
-                    label :fields[i].external_id,
-                    dataType : "STRING",
-                    semantics: {
-                        conceptType: 'DIMENSION'
-                    }
-                })
-            }
-        }else if(fields[i].type == 'date'){
-            if(fields[i].status == 'active'){
-                schema.push({
-                    name  : fields[i].external_id,
-                    label  : fields[i].external_id,
-                    dataType : "DATE",
-                    semantics: {
-                        'conceptType': 'METRIC'
-                    }
-                })
-            }
-        }else if(fields[i].type == 'calculation'){
-            if(fields[i].status == "active"){
-                schema.push({
-                    name  : fields[i].external_id,
-                    label  : fields[i].external_id,
-                    dataType : "NUMBER",
-                    semantics: {
-                        conceptType: 'METRIC',
-                    }
-                })
-            }
-        }else if(fields[i].type == "number"){
-            if(fields[i].status == 'active'){
-                schema.push({
-                    name  : fields[i].external_id,
-                    label  : fields[i].external_id,
-                    dataType : "NUMBER",
-                    semantics: {
-                        conceptType: 'METRIC',
-                    }
-                })
-            }
-        }else if(fields[i].type == 'location'){
-            if(fields[i].status == 'active'){
-                schema.push({
-                    name  : fields[i].external_id,
-                    label  : fields[i].external_id,
-                    dataType : "STRING",
-                    semantics: {
-                        conceptType: 'DIMENSION'
-                    }
-                })
-            }
-        }else if(fields.type == 'catagory'){
-            if(fields[i].status == 'active'){
-                schema.push({
-                    name  : fields[i].external_id,
-                    label  : fields[i].external_id,
-                    dataType : "STRING",
-                    semantics: {
-                        conceptType: 'DIMENSION'
-                    }
-                })
-            }
-        }
-    }
-    return schema;
-}
