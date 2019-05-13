@@ -154,6 +154,7 @@ function getFields(request){
 
 
 function getData(request) {
+    var podioSchema = getSchema(request).schema;
     // Create schema for requested fields
     console.log("Request :" + JSON.stringify(request));
     console.log("GET DATA " + podioSchema);
@@ -181,15 +182,48 @@ function getData(request) {
         var tempObj = {};
         // tempObj['item_id'] = item_id;
         for(var j =0; j < fields.length; j++){
-            // if(fields[i].external_id == )
+            for(var k =0; k < requestedSchema.length; k++){
+                if(fields[j].external_id == requestedSchema[k].name){
+                    var external_id = fields[j].external_id;
+                    if(fields[j].type == 'text'){
+                        tempObj[external_id] = fields[j].values[0].value;
+                    }
+                    if(fields[j].type == 'app'){
+                    
+                        tempObj[external_id]  = fields[j].values[0].value.item_id;
+                    }
+                    if(fields[j].type == 'date'){
+
+                        tempObj[external_id]  = (fields[j].values[0].start_date).split('-').join('');
+                        console.log("date : " + fields[j].values[0].start_date );
+                    }
+                    if(fields[j].type == 'calculation'){
+
+                        tempObj[external_id]  = fields[j].values[0].value;
+    
+                    }
+                    if(fields[j].type == "number"){
+                        tempObj[external_id]  = parseInt(fields[j].values[0].value);
+    
+                    }else if(fields[j].type == 'location'){
+                        tempObj[external_id]  = fields[j].values[0].value;
+    
+                    }else if(fields[j].type == 'catagory'){
+    
+                        tempObj[external_id]  = fields[j].values[0].value.id;
+                    }
+                }
+            }
         }
         itemData.push(tempObj);
         tempObj = {};
     }
-  
+    var values = [{
+        values : itemData
+    }];
     return {
       schema: requestedSchema,
-      rows: itemData
+      rows: values
     };
 }
 

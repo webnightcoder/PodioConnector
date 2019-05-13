@@ -1,5 +1,5 @@
 {
-  "timeZone": "America/New_York",
+  "timeZone": "Pacific/Pago_Pago",
   "dependencies": {
     "libraries": [{
       "userSymbol": "OAuth2",
@@ -7,13 +7,16 @@
       "version": "26"
     }]
   },
-  "dataStudio":{
-    "name": "Podio Connector",
-    "company": "Lucenta solutions",
-    "logoUrl": "https://lh5.googleusercontent.com/p/AF1QipMLt2jYXucaqZnei7yKgOZwxhPOEFQ3-OnlfxBp=w160-h160-k-no",
-    "addonUrl": "https://github.com/webnightcoder/podio-connector",
-    "supportUrl": "https://github.com/webnightcoder/podio-connector",
-    "description": "Fetch Data from Podio and Create Graph"
-  },
-  "exceptionLogging": "STACKDRIVER"
+  "exceptionLogging": "STACKDRIVER",
+  "dataStudio": {
+    "name": "Spotify Track Popularity",
+    "logoUrl": "https://developer.spotify.com/assets/branding-guidelines/logo@2x.png",
+    "company": "Google Developer Relations",
+    "companyUrl": "https://developers.google.com/datastudio/",
+    "addonUrl": "https://github.com/googledatastudio/community-connectors/tree/master/spotify-recent-plays",
+    "supportUrl": "https://github.com/google/datastudio/issues",
+    "description": "This connector queries the most popular tracks for an artist through the Spotify API.",
+    "shortDescription": "Query track popularity statistics by artist through Spotify.",
+    "sources": ["Spotify"]
+  }
 }
